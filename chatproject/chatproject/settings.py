@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Initialise environment variables
 env = environ.Env()
-environ.Env.read_env(os.path.join(f"{BASE_DIR}/via_analytics_project", ".env"))
+environ.Env.read_env(os.path.join(f"{BASE_DIR}/chatproject", ".env"))
 ENV = env("ENV")
 
 
