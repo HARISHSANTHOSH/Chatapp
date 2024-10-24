@@ -1,0 +1,7 @@
+# pyenv config
+.python-version
+
+
+#Enviornment
+
+.env
