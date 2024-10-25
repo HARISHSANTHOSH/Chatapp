@@ -85,3 +85,58 @@ class ChatHistory(APIView):
             {"result": True, "msg": "Success", "data": serialized_data},
             status=status.HTTP_200_OK,
         )
+
+
+class ChatBookmark(APIView):
+    def get(self, request):
+        user = request.user
+        search_text = request.query_params.get("search_text", None)
+        char_history_controller = controllers.ChatHistoryController()
+
+        if search_text:
+            chat_data = char_history_controller.search_bookmark(
+                user=user, search_text=search_text
+            )
+        else:
+            chat_data = char_history_controller.get_bookmark(user=user)
+        serialized_data = serializers.ChatHistorySerializers(chat_data).data
+
+        return response.Response(
+            {"result": True, "msg": "success", "data": serialized_data}
+        )
+
+    def put(self, request):
+        chat_id = request.data.get("chat_id", None)
+        is_bookmark = request.data.get("is_bookmarked", False)
+        char_history_controller = controllers.ChatHistoryController()
+
+        data = char_history_controller.bookmark_chat_history(
+            chat_id=chat_id, is_bookmark=is_bookmark
+        )
+
+        return response.Response(
+            {
+                "result": True,
+                "msg": f"Successfully set bookmark to {is_bookmark}",
+                "data": data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class ChatThread(APIView):
+    def get(self, request):
+        char_history_controller = controllers.ChatHistoryController()
+        user = request.user
+        search_text = request.query_params.get("search_text", None)
+
+        if search_text:
+            chat_thread = char_history_controller.search_chat_thread(
+                user=user, search_text=search_text
+            )
+        else:
+            chat_thread = char_history_controller.get_all_threads(user=user)
+
+            return response.Response(
+                {"result": True, "msg": "good", "data": chat_thread}
+            )
