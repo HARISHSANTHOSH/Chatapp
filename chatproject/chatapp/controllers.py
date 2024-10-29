@@ -2,7 +2,7 @@ import random
 
 from django.contrib.auth.models import User
 from django.core import exceptions
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from rest_framework import serializers
 
 from chatapp import models
@@ -164,3 +164,65 @@ class ChatHistoryController:
         ).order_by("-created_on")
 
         return chat_data
+
+    @staticmethod
+    def get_all_threads(user: User) -> QuerySet[models.ChatThread]:
+
+        chat_thread = models.ChatThread.objects.filter(
+            user=user, is_active=True
+        ).order_by("-created_on")
+
+        return chat_thread
+
+    @staticmethod
+    def search_bookmark(
+        user: User, search_text: str
+    ) -> QuerySet[models.ChatHistory]:
+
+        return (
+            models.ChatHistory.objects.filter(
+                user=user, is_bookmark=True, is_active=True
+            )
+            .filter(
+                Q(query__icontaines=search_text)
+                | Q(response__icontains=search_text)
+            )
+            .order_by("-updated_on")
+        )
+
+    @staticmethod
+    def bookmark_chat_history(
+        chat_id: str,
+        is_bookmark: bool,
+    ) -> models.ChatHistory:
+
+        try:
+            chat_history = models.ChatHistory.objects.get(
+                id=chat_id, is_active=True
+            )
+        except exceptions.ObjectDoesNotExist:
+            raise serializers.ValidationError({"result": True, "msg": "not"})
+        chat_history.is_bookamarked = is_bookmark
+        chat_history.save()
+
+    @staticmethod
+    def get_bookmark(user: User) -> QuerySet[models.ChatHistory]:
+
+        bookmarks = models.ChatHistory.objects.filter(
+            chatthread_user=user, is_bookmarked=True, is_active=True
+        ).order_by("-updated_on")
+        return bookmarks
+
+    @staticmethod
+    def search_chat_thread(
+        user: User, search_text: str
+    ) -> QuerySet[models.ChatThread]:
+
+        return (
+            models.ChatThread.objects.filter(user=user, is_active=True)
+            .filter(
+                Q(query__icontains=search_text)
+                | Q(response__icontains=search_text)
+            )
+            .order_by("-updated_on")
+        )
