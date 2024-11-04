@@ -3,6 +3,8 @@ asgiref==3.8.1; python_version >= '3.8'
 cfgv==3.4.0; python_version >= '3.8'
 distlib==0.3.9
 django==5.1.2; python_version >= '3.10'
+django-debug-toolbar==4.4.6; python_version >= '3.8'
+django-environ==0.11.2; python_version >= '3.6' and python_version < '4'
 djangorestframework==3.15.2; python_version >= '3.8'
 environ==1.0
 filelock==3.16.1; python_version >= '3.8'
