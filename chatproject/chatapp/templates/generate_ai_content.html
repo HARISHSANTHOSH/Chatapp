@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Generator</title>
+</head>
+<body>
+    <h1>Generate AI Content</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <label for="prompt">Enter your prompt:</label>
+        <input type="text" name="query" placeholder="Enter the person's name" required>
+    <button type="submit">Generate Response</button>
+    </form>
+
+    {% if ai_response %}
+        <h2>AI Response:</h2>
+        <p>{{ ai_response }}</p>
+    {% elif error_message %}
+        <h2>Error:</h2>
+        <p>{{ error_message }}</p>
+    {% endif %}
+</body>
+</html>

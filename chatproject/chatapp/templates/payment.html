@@ -1,0 +1,293 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe Payment Test</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .pricing-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .price {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Choose your plan</h1>
+
+    <div class="pricing-card">
+        <h2>Standard Plan</h2>
+        <div class="price">$79.99/month</div>
+        <p>One-time strategic plan with actionable recommendations and reports.</p>
+        <button onclick="handlePayment('standard')" id="standardBtn">Get Standard Plan</button>
+    </div>
+
+    <div class="pricing-card">
+        <h2>Premium Plan</h2>
+        <div class="price">$99.99/month</div>
+        <p>Subscription to utilize features based on data entry, surveys, assessments, and reports.</p>
+        <button onclick="handlePayment('premium')" id="premiumBtn">Get Premium Plan</button>
+    </div>
+
+    <script>
+        // Initialize Stripe
+        const stripe = Stripe('pk_test_51QEmnVRxh8bsZEJ9q2QscVU5wzhvKCtJsdAsrhbrCTAkiQmoZ5ccBEU1fbH0rQyLZ99W9TBH7pdlV04KAHl5OfwO00yaW9UCOR');
+        
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        console.log("CSRF Token from Cookie:", getCookie('csrftoken'));
+
+        // Handle payment
+        async function handlePayment(planId) {
+            try {
+                // Create checkout session
+                const response = await fetch('http://127.0.0.1:8000/api/v1/chatapp/create-checkout-session/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCookie('csrftoken')  // Fix CSRF token header
+                    },
+                    body: `plan_id=${planId}`
+                });
+                console.log("token",getCookie('csrftoken'))
+                
+
+                const data = await response.json();
+                console.log('Session data:', data);
+
+                if (data.orderReference) {
+                sessionStorage.setItem('orderReference', data.orderReference);
+                console.log('Order Reference stored in sessionStorage:', data.orderReference);
+            }
+
+
+                // Redirect to Stripe Checkout
+                const result = await stripe.redirectToCheckout({
+                    sessionId: data.sessionId
+                });
+
+                if (result.error) {
+                    console.error(result.error);
+                    alert('Payment failed: ' + result.error.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error creating checkout session');
+            }
+        }
+    </script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe Payment Test</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .pricing-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .price {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input[type="number"] {
+            padding: 8px;
+            font-size: 16px;
+            width: calc(100% - 20px);
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #card-element {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Choose your plan</h1>
+
+    <!-- Standard Plan -->
+    <div class="pricing-card">
+        <h2>Standard Plan</h2>
+        <div class="price">$79.99/month</div>
+        <p>One-time strategic plan with actionable recommendations and reports.</p>
+        <button onclick="handlePayment('standard')" id="standardBtn">Get Standard Plan</button>
+    </div>
+
+    <!-- Premium Plan -->
+    <div class="pricing-card">
+        <h2>Premium Plan</h2>
+        <div class="price">$99.99/month</div>
+        <p>Subscription to utilize features based on data entry, surveys, assessments, and reports.</p>
+        <button onclick="handlePayment('premium')" id="premiumBtn">Get Premium Plan</button>
+    </div>
+
+    <!-- Custom Pricing -->
+    <div class="pricing-card">
+        <h2>Custom Plan</h2>
+        <div class="price">Custom Amount</div>
+        <p>One-time custom payment for a unique service or product.</p>
+        <button onclick="handleCustomPricing()" id="customPricingBtn">Get Custom Plan</button>
+    </div>
+    
+
+    <script>
+        // Initialize Stripe and Elements
+        const stripe = Stripe('pk_test_51QEmnVRxh8bsZEJ9q2QscVU5wzhvKCtJsdAsrhbrCTAkiQmoZ5ccBEU1fbH0rQyLZ99W9TBH7pdlV04KAHl5OfwO00yaW9UCOR');
+        const elements = stripe.elements();
+        const card = elements.create('card');
+        card.mount('#card-element');
+
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        console.log("CSRF Token from Cookie:", getCookie('csrftoken'));
+
+        // Handle subscription payments
+        async function handlePayment(planId) {
+            try {
+                const userEmail = "sparow@gmail.com";
+                // Create checkout session
+                const response = await fetch('http://127.0.0.1:8000/api/v1/chatapp/create-checkout-session/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ plan_id: planId, email: userEmail}) 
+                });
+                console.log('Selected Plan:', planId);
+                const data = await response.json();
+                console.log('Session data:', data);
+
+                if (data.orderReference) {
+                    sessionStorage.setItem('orderReference', data.orderReference);
+                    console.log('Order Reference stored in sessionStorage:', data.orderReference);
+                }
+
+                // Redirect to Stripe Checkout
+                const result = await stripe.redirectToCheckout({
+                    sessionId: data.sessionId
+                });
+
+                if (result.error) {
+                    console.error(result.error);
+                    alert('Payment failed: ' + result.error.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error creating checkout session');
+            }
+        }
+
+       // Handle Custom Pricing
+       async function handleCustomPricing() {
+    const customAmount = prompt("Enter custom amount:");
+    
+    if (!customAmount || isNaN(customAmount) || customAmount <= 0) {
+        alert("Invalid amount");
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/v1/chatapp/create-one-time-payment-session/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ amount: customAmount }) 
+        });
+
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+        
+        await stripe.redirectToCheckout({ sessionId: data.sessionId });
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Payment failed: ' + error.message);
+    }
+}
+
+    </script>
+</body>
+</html>

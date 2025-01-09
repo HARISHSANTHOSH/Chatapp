@@ -22,10 +22,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 environ.Env.read_env(os.path.join(f"{BASE_DIR}/chatproject", ".env"))
 ENV = env("ENV")
-
-
+DJANGO_SETTINGS_MODULE = env("DJANGO_SETTINGS_MODULE")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+
+# STRIPE Configuration
+STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY")
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET")
+STRIPE_CLI_SECRET = env("STRIPE_CLI_SECRET")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = (
@@ -35,8 +40,11 @@ SECRET_KEY = (
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*','9eae-103-184-239-115.ngrok-free.app']
 
+
+# settings.py (for testing emails locally)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Application definition
 
