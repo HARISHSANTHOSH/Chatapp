@@ -91,20 +91,55 @@ class StripeWebhookHandler:
                     status=status.HTTP_200_OK,
                 )
 
-            # Handle subscription creation or update based on the user's email
-            user_subscription, created = (
-                models.UserSubscription.objects.update_or_create(
-                    user_email=customer_email,  # Unique identifier for the user
-                    defaults={
-                        "customer_name": customer_name,
-                        "order_reference": order_reference,
-                        "plan": plan_id,
-                        "status": payment_status,  # Status is now based on the payment status
-                        "start_date": start_date,
-                        "current_period_end": current_period_end,
-                    },
+            # Check if the user already has an existing subscription
+            existing_subscription = models.UserSubscription.objects.filter(
+                user_email=customer_email
+            ).first()
+
+            # If the user has an existing subscription, it's an upgrade or change
+            if existing_subscription:
+                # If the plan has changed, mark the old subscription as upgraded
+                if existing_subscription.plan != plan_id:
+                    existing_subscription.status = "inactive"
+                    existing_subscription.save()
+
+                # Create a new subscription for the upgraded plan
+                user_subscription = models.UserSubscription.objects.create(
+                    user_email=customer_email,
+                    customer_name=customer_name,
+                    order_reference=order_reference,
+                    plan=plan_id,
+                    status="active",  # New subscription is active
+                    start_date=start_date,
+                    current_period_end=current_period_end,
                 )
-            )
+
+                # Log the upgrade event
+                logger.info(
+                    f"Subscription upgraded for {customer_email}, Plan: {plan_id}"
+                )
+
+                # Send an upgrade email if needed (optional)
+                # send_mail.send_upgrade_email(user_subscription)
+
+            else:
+                # No existing subscription, create a new one (for a new user)
+                user_subscription = models.UserSubscription.objects.create(
+                    user_email=customer_email,
+                    customer_name=customer_name,
+                    order_reference=order_reference,
+                    plan=plan_id,
+                    status="active",  # New subscription is active
+                    start_date=start_date,
+                    current_period_end=current_period_end,
+                )
+
+                # Log the new subscription creation
+                logger.info(
+                    f"New subscription created for {customer_email}, Plan: {plan_id}"
+                )
+                # Send a confirmation email if needed (optional)
+                # send_mail.send_subscription_confirmation(user_subscription)
 
             # Create a payment record in the UserPayment model
             user_payment = models.UserPayment.objects.create(
@@ -115,20 +150,6 @@ class StripeWebhookHandler:
                 payment_status=payment_status,
                 payment_date=payment_date,
             )
-
-            # Log the successful subscription/payment creation or update
-            if created:
-                logger.info(
-                    f"New subscription created for {customer_email}, Plan: {plan_id}"
-                )
-                # You can also send a confirmation email here if needed
-                send_mail.send_subscription_confirmation(user_subscription)
-            else:
-                logger.info(
-                    f"Subscription updated for {customer_email}, Plan: {plan_id}"
-                )
-                # Send an email about the successful update
-                send_mail.send_upgrade_email(user_subscription)
 
             return Response(
                 {"status": "Subscription created/updated successfully"},
@@ -143,6 +164,7 @@ class StripeWebhookHandler:
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
     @staticmethod
     def handle_payment_intent(event):
