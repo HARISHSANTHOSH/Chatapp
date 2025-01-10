@@ -11,4 +11,5 @@ urlpatterns = [
     ),
     path("thread/", views.ChatThread.as_view(), name="chat_threads"),
     path("bookmark/", views.ChatBookmark.as_view(), name="chat_bookmark"),
+
 ]

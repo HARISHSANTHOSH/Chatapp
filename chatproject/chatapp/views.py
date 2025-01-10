@@ -1,9 +1,27 @@
+import json
+import logging
 import uuid
 
+import stripe
+from django.conf import settings
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import response, status
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from chatapp import controllers, serializers
+from chatapp import constants, controllers, serializers
+
+from .models import UserSubscription
+from .serializers import UserPaySerializer
+from .stripe_webhook import StripeWebhookHandler
+
+logger = logging.getLogger(__name__)
+
+logger = logging.getLogger(__name__)
 
 
 class ChatHistory(APIView):
@@ -28,6 +46,25 @@ class ChatHistory(APIView):
         if not thread_id:
             chat_thread = char_history_controller.create_thread(
                 user=user, query=user_query, is_active=False
+            )
+            # Mock the chat response based on the user query
+            chat_response = char_history_controller.mockchat(user_query)
+
+            # Save the chat history
+            add_history = char_history_controller.save_chat_history(
+                chat_thread=chat_thread,
+                query=user_query,
+                response=chat_response,
+            )
+
+            # Serialize the added chat history
+            serialized_data = serializers.ChatHistorySerializers(
+                add_history
+            ).data
+
+            return response.Response(
+                {"result": True, "msg": "Success", "data": serialized_data},
+                status=status.HTTP_201_CREATED,
             )
         else:
             # Validate the thread_id format
@@ -64,7 +101,7 @@ class ChatHistory(APIView):
 
             return response.Response(
                 {"result": True, "msg": "Success", "data": serialized_data},
-                status=status.HTTP_201_CREATED,
+                status=status.HTTP_200_OK,
             )
 
     def get(self, request, thread_id=None):

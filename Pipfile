@@ -11,7 +11,9 @@ environ = "*"
 django-environ = "*"
 django-debug-toolbar = "*"
 
+
 [dev-packages]
+ipykernel = "*"
 
 [requires]
 python_version = "3.10"

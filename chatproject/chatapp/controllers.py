@@ -1,4 +1,5 @@
 import random
+from typing import Tuple
 
 from django.contrib.auth.models import User
 from django.core import exceptions
@@ -6,6 +7,8 @@ from django.db.models import Q, QuerySet
 from rest_framework import serializers
 
 from chatapp import models
+
+from .models import Person
 
 
 class ChatHistoryController:
@@ -226,3 +229,4 @@ class ChatHistoryController:
             )
             .order_by("-updated_on")
         )
+
