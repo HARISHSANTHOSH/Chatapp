@@ -11,7 +11,9 @@ from django.utils.timezone import make_aware
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import response, status
 from rest_framework.response import Response
+
 from chatapp import send_mail
+
 from . import models
 from .exceptions import CustomException
 
@@ -53,22 +55,24 @@ class StripeWebhookHandler:
         """Handle the 'checkout.session.completed' event."""
         try:
             # Extract data from the session object
-            session = event['data']['object']
-            plan_id = session['metadata'].get('plan_id', 'unknown')
-            amount_received = session.get('amount_total', 0) / 100  # Convert cents to dollars
-            currency = session.get('currency', 'usd')
-            order_reference = session.get('client_reference_id')
-            payment_status = session['payment_status']
-            timestamp = session.get('created', None)
+            session = event["data"]["object"]
+            plan_id = session["metadata"].get("plan_id", "unknown")
+            amount_received = (
+                session.get("amount_total", 0) / 100
+            )  # Convert cents to dollars
+            currency = session.get("currency", "usd")
+            order_reference = session.get("client_reference_id")
+            payment_status = session["payment_status"]
+            timestamp = session.get("created", None)
             payment_date = make_aware(datetime.fromtimestamp(timestamp))
-            customer_details = session.get('customer_details', {})
-            customer_email = customer_details.get('email', '')
-            customer_name = customer_details.get('name', '')
+            customer_details = session.get("customer_details", {})
+            customer_email = customer_details.get("email", "")
+            customer_name = customer_details.get("name", "")
 
             now = timezone.now()
-            start_date = now - relativedelta(months=1)  
-            current_period_end = now + relativedelta(months=1) 
-            subscription_id = session.get('subscription')
+            start_date = now - relativedelta(months=1)
+            current_period_end = now + relativedelta(months=1)
+            subscription_id = session.get("subscription")
             subscription = stripe.Subscription.retrieve(subscription_id)
             latest_invoice_id = subscription.latest_invoice
             invoice = stripe.Invoice.retrieve(latest_invoice_id)
@@ -76,24 +80,30 @@ class StripeWebhookHandler:
             logger.info("payment_intent_id:", payment_intent_id)
 
             # Check if the order has already been processed
-            if models.UserSubscription.objects.filter(order_reference=order_reference).exists():
-                logger.info(f"Order reference {order_reference} already exists. Skipping creation.")
+            if models.UserSubscription.objects.filter(
+                order_reference=order_reference
+            ).exists():
+                logger.info(
+                    f"Order reference {order_reference} already exists. Skipping creation."
+                )
                 return Response(
-                    {'status': 'Order already processed'},
-                    status=status.HTTP_200_OK
+                    {"status": "Order already processed"},
+                    status=status.HTTP_200_OK,
                 )
 
             # Handle subscription creation or update based on the user's email
-            user_subscription, created = models.UserSubscription.objects.update_or_create(
-                user_email=customer_email,  # Unique identifier for the user
-                defaults={
-                    'customer_name': customer_name,
-                    'order_reference': order_reference,
-                    'plan': plan_id,
-                    'status': payment_status,  # Status is now based on the payment status
-                    'start_date': start_date,
-                    'current_period_end': current_period_end,
-                }
+            user_subscription, created = (
+                models.UserSubscription.objects.update_or_create(
+                    user_email=customer_email,  # Unique identifier for the user
+                    defaults={
+                        "customer_name": customer_name,
+                        "order_reference": order_reference,
+                        "plan": plan_id,
+                        "status": payment_status,  # Status is now based on the payment status
+                        "start_date": start_date,
+                        "current_period_end": current_period_end,
+                    },
+                )
             )
 
             # Create a payment record in the UserPayment model
@@ -103,32 +113,36 @@ class StripeWebhookHandler:
                 amount=amount_received,
                 currency=currency,
                 payment_status=payment_status,
-                payment_date=payment_date
+                payment_date=payment_date,
             )
 
             # Log the successful subscription/payment creation or update
             if created:
-                logger.info(f"New subscription created for {customer_email}, Plan: {plan_id}")
+                logger.info(
+                    f"New subscription created for {customer_email}, Plan: {plan_id}"
+                )
                 # You can also send a confirmation email here if needed
                 send_mail.send_subscription_confirmation(user_subscription)
             else:
-                logger.info(f"Subscription updated for {customer_email}, Plan: {plan_id}")
+                logger.info(
+                    f"Subscription updated for {customer_email}, Plan: {plan_id}"
+                )
                 # Send an email about the successful update
                 send_mail.send_upgrade_email(user_subscription)
 
             return Response(
-                {'status': 'Subscription created/updated successfully'},
-                status=status.HTTP_200_OK
+                {"status": "Subscription created/updated successfully"},
+                status=status.HTTP_200_OK,
             )
 
         except Exception as e:
             # Log any errors that occur during processing
-            logger.error(f"Error processing checkout session: {str(e)}", exc_info=True)
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            logger.error(
+                f"Error processing checkout session: {str(e)}", exc_info=True
             )
-
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @staticmethod
     def handle_payment_intent(event):
