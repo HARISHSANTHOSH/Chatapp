@@ -6,13 +6,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('chatapp', '0001_initial'),
+        ("chatapp", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='usersubscription',
-            name='status',
-            field=models.CharField(choices=[('active', 'Active'), ('upgraded', 'Upgraded'), ('cancelled', 'Cancelled')], default='active', max_length=50),
+            model_name="usersubscription",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("active", "Active"),
+                    ("upgraded", "Upgraded"),
+                    ("cancelled", "Cancelled"),
+                ],
+                default="active",
+                max_length=50,
+            ),
         ),
     ]

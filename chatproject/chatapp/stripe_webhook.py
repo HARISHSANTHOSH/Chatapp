@@ -165,7 +165,6 @@ class StripeWebhookHandler:
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
     @staticmethod
     def handle_payment_intent(event):
         """Handle the 'payment_intent.succeeded' event for one-time custom payments."""
