@@ -1,5 +1,4 @@
 from rest_framework.views import exception_handler
-
 from tj_packages import log
 
 

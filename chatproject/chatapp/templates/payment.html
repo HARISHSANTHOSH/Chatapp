@@ -225,7 +225,7 @@
         // Handle subscription payments
         async function handlePayment(planId) {
             try {
-                const userEmail = "sparow@gmail.com";
+                // const userEmail = "sparow@gmail.com";
                 // Create checkout session
                 const response = await fetch('http://127.0.0.1:8000/api/v1/chatapp/create-checkout-session/', {
                     method: 'POST',
@@ -233,7 +233,7 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': getCookie('csrftoken')
                     },
-                    body: JSON.stringify({ plan_id: planId, email: userEmail}) 
+                    body: JSON.stringify({ plan_id: planId}) 
                 });
                 console.log('Selected Plan:', planId);
                 const data = await response.json();

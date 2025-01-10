@@ -1,14 +1,16 @@
 import random
+from typing import Tuple
 
 from django.contrib.auth.models import User
 from django.core import exceptions
-from django.db.models import QuerySet
-from rest_framework import serializers
-from .models import Person
-from chatapp import models
+from django.db.models import F, QuerySet
 from pgvector.django import CosineDistance
-from django.db.models import F
-from typing import Tuple
+from rest_framework import serializers
+
+from chatapp import models
+
+from .models import Person
+
 
 class ChatHistoryController:
 
@@ -230,8 +232,9 @@ class ChatHistoryController:
         )
 
 
-
-def add_user_data(user_id: str, name: str, email: str, phone_number: str, address: str):
+def add_user_data(
+    user_id: str, name: str, email: str, phone_number: str, address: str
+):
     """
     Generate embedding for the user's content and store it in the Person model.
     """
@@ -246,16 +249,17 @@ def add_user_data(user_id: str, name: str, email: str, phone_number: str, addres
         email=email,
         phone_number=phone_number,
         address=address,
-        embedding=embedding
+        embedding=embedding,
     )
     return person
 
 
-
 from typing import TypedDict
+
 
 class PersonResult(TypedDict):
     """Custom dict type hint for vector search results from Person table."""
+
     id: int
     name: str
     phone_number: str
@@ -281,22 +285,23 @@ def query_user_data(user_query: str) -> Tuple[Person | None, str | None]:
         print(f"Received user_query: {user_query}")
 
         # Generate embedding for the user query
-        embedding = generate_embedding(user_query)  
-       
+        embedding = generate_embedding(user_query)
 
         # Perform vector search using cosine similarity
         person = (
-            Person.objects.annotate(similarity=CosineDistance(F('embedding'), embedding))
-            .order_by('distance')
-             .values("id", "name", "phone_number", "email", "address", "similarity")
+            Person.objects.annotate(
+                similarity=CosineDistance(F("embedding"), embedding)
+            )
+            .order_by("distance")
+            .values(
+                "id", "name", "phone_number", "email", "address", "similarity"
+            )
             .first()
         )
-        print("person",person)
+        print("person", person)
 
         return person, None  # Return person and no error
 
     except Exception as e:
         # Handle errors in the embedding or query process
         return None, f"Error during vector search: {str(e)}"
-
-

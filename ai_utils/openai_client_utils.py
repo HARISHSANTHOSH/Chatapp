@@ -1,6 +1,5 @@
 import json
-from typing import Callable, Type , TypeVar
-
+from typing import Callable, Type, TypeVar
 
 import httpx
 import openai
@@ -8,11 +7,11 @@ import tiktoken
 from openai.types import CreateEmbeddingResponse
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 from openai.types.embedding import Embedding
-from pydantic import BaseModel , ValidationError
-from .log_models import OpenAINodeRunLog
-from .constants import OpenAIConstants, OpenAIModels
-from .retry import retry_with_exponential_backoff
+from pydantic import BaseModel, ValidationError
 
+from .constants import OpenAIConstants, OpenAIModels
+from .log_models import OpenAINodeRunLog
+from .retry import retry_with_exponential_backoff
 
 T = TypeVar("T", bound=BaseModel)
 class OpenAINode:
