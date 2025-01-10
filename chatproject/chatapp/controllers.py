@@ -3,8 +3,7 @@ from typing import Tuple
 
 from django.contrib.auth.models import User
 from django.core import exceptions
-from django.db.models import F, QuerySet
-from pgvector.django import CosineDistance
+from django.db.models import Q, QuerySet
 from rest_framework import serializers
 
 from chatapp import models
@@ -231,77 +230,3 @@ class ChatHistoryController:
             .order_by("-updated_on")
         )
 
-
-def add_user_data(
-    user_id: str, name: str, email: str, phone_number: str, address: str
-):
-    """
-    Generate embedding for the user's content and store it in the Person model.
-    """
-    # Generate the embedding for the user's content
-    content = f"{name} {email} {phone_number} {address}"  # You can change how you want to combine content
-    embedding = generate_embedding(content)
-
-    # Create a new instance of the Person model and save it to the database
-    person = Person.objects.create(
-        id=user_id,
-        name=name,
-        email=email,
-        phone_number=phone_number,
-        address=address,
-        embedding=embedding,
-    )
-    return person
-
-
-from typing import TypedDict
-
-
-class PersonResult(TypedDict):
-    """Custom dict type hint for vector search results from Person table."""
-
-    id: int
-    name: str
-    phone_number: str
-    email: str
-    address: str
-    similarity: float
-
-
-def query_user_data(user_query: str) -> Tuple[Person | None, str | None]:
-    """
-    Query the Person model to find a matching person using vector similarity.
-
-    Args:
-        user_query (str): The query input from the user.
-
-    Returns:
-        Tuple[Person | None, str | None]: A tuple containing:
-            - A Person object if a match is found, otherwise None.
-            - An error message if something goes wrong, otherwise None.
-    """
-    try:
-        # Debugging: Print the query_texts
-        print(f"Received user_query: {user_query}")
-
-        # Generate embedding for the user query
-        embedding = generate_embedding(user_query)
-
-        # Perform vector search using cosine similarity
-        person = (
-            Person.objects.annotate(
-                similarity=CosineDistance(F("embedding"), embedding)
-            )
-            .order_by("distance")
-            .values(
-                "id", "name", "phone_number", "email", "address", "similarity"
-            )
-            .first()
-        )
-        print("person", person)
-
-        return person, None  # Return person and no error
-
-    except Exception as e:
-        # Handle errors in the embedding or query process
-        return None, f"Error during vector search: {str(e)}"

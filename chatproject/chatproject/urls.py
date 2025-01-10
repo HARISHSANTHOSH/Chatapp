@@ -23,9 +23,9 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/chatapp/", include("chatapp.urls")),
 ]
-if settings.DEBUG:  # Debug toolbar should only be active in development
+if settings.DEBUG:
     import debug_toolbar
 
-    urlpatterns += [
+    urlpatterns = [
         path("__debug__/", include(debug_toolbar.urls)),
-    ]
+    ] + urlpatterns
