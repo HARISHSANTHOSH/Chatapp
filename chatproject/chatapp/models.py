@@ -97,9 +97,12 @@ class UserSubscription(models.Model):
     status = models.CharField(
         max_length=50,
         choices=[
-        ("active", "Active"),
-        ("inactive", "Inactive"),  # When the user downgrades or the plan becomes inactive
-        ("cancelled", "Cancelled"),
+            ("active", "Active"),
+            (
+                "inactive",
+                "Inactive",
+            ),  # When the user downgrades or the plan becomes inactive
+            ("cancelled", "Cancelled"),
         ],
         default="active",
     )  #
