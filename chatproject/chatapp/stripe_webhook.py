@@ -128,6 +128,7 @@ class StripeWebhookHandler:
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+class SubscriptionManager:
     @staticmethod
     def handle_subscription(customer_info: CustomerInfo, 
                           subscription_info: SubscriptionInfo) -> models.UserSubscription:
@@ -178,6 +179,7 @@ class StripeWebhookHandler:
             start_date=subscription_info.start_date,
             current_period_end=subscription_info.current_period_end,
         )
+
 
 class PaymentManager:
     @staticmethod
